@@ -277,6 +277,7 @@ const translations = {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     // Load language preference from localStorage
@@ -284,6 +285,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'ko')) {
       setLanguage(savedLanguage);
     }
+    setIsLoaded(true);
   }, []);
 
   const handleSetLanguage = (lang: Language) => {
@@ -305,6 +307,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     
     return typeof value === 'string' ? value : key;
   };
+
+  // Don't render until language is loaded to prevent hydration mismatch
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
