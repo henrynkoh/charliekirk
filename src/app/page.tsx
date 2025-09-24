@@ -1,103 +1,427 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { Search, Filter, BookOpen, Calendar, MapPin, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { qaDatabase, bibleVerses, categories, platforms, mediaTypes, theologicalThemes } from '@/data/qa-database';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState('');
+  const [selectedMediaType, setSelectedMediaType] = useState('');
+  const [selectedTheologicalTheme, setSelectedTheologicalTheme] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [expandedQA, setExpandedQA] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Filter and search logic
+  const filteredQA = useMemo(() => {
+    return qaDatabase.filter(qa => {
+      const matchesSearch = searchTerm === '' || 
+        qa.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        qa.answer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        qa.bibleVerses.some(verse => verse.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesCategory = selectedCategory === '' || qa.category === selectedCategory;
+      const matchesPlatform = selectedPlatform === '' || qa.platform === selectedPlatform;
+      const matchesMediaType = selectedMediaType === '' || qa.mediaType === selectedMediaType;
+      const matchesTheologicalTheme = selectedTheologicalTheme === '' || qa.theologicalTheme === selectedTheologicalTheme;
+
+      return matchesSearch && matchesCategory && matchesPlatform && matchesMediaType && matchesTheologicalTheme;
+    });
+  }, [searchTerm, selectedCategory, selectedPlatform, selectedMediaType, selectedTheologicalTheme]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredQA.length / itemsPerPage);
+  const paginatedQA = filteredQA.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Bible verse lookup
+  const getBibleVerse = (reference: string) => {
+    return bibleVerses.find(verse => verse.reference === reference);
+  };
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedPlatform, selectedMediaType, selectedTheologicalTheme]);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
+      <header className="bg-white shadow-lg border-b-4 border-blue-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Charlie Kirk: Complete Religious Q&A Archive
+              </h1>
+              <p className="text-lg text-gray-600">
+                847+ Documented Religious Q&A Sessions • 234+ Bible Verses Referenced
+              </p>
+            </div>
+            <div className="mt-4 lg:mt-0">
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-100 px-4 py-2 rounded-lg">
+                  <span className="text-sm font-medium text-blue-800">
+                    {filteredQA.length} Sessions Found
+                  </span>
+                </div>
+                <div className="bg-green-100 px-4 py-2 rounded-lg">
+                  <span className="text-sm font-medium text-green-800">
+                    {bibleVerses.length} Bible Verses
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </header>
+
+      {/* Search and Filters */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          {/* Search Bar */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <input
+              type="text"
+              placeholder="Search questions, answers, or Bible verses..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Filter Toggle */}
+          <div className="mb-6">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-medium"
+            >
+              <Filter className="h-5 w-5" />
+              <span>Advanced Filters</span>
+              {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+          </div>
+
+          {/* Filters */}
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Platform</label>
+                <select
+                  value={selectedPlatform}
+                  onChange={(e) => setSelectedPlatform(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Platforms</option>
+                  {platforms.map(platform => (
+                    <option key={platform} value={platform}>{platform}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Media Type</label>
+                <select
+                  value={selectedMediaType}
+                  onChange={(e) => setSelectedMediaType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Media Types</option>
+                  {mediaTypes.map(mediaType => (
+                    <option key={mediaType} value={mediaType}>{mediaType}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Theological Theme</label>
+                <select
+                  value={selectedTheologicalTheme}
+                  onChange={(e) => setSelectedTheologicalTheme(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Themes</option>
+                  {theologicalThemes.map(theme => (
+                    <option key={theme} value={theme}>{theme}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Clear Filters */}
+          {(selectedCategory || selectedPlatform || selectedMediaType || selectedTheologicalTheme) && (
+            <div className="mb-6">
+              <button
+                onClick={() => {
+                  setSelectedCategory('');
+                  setSelectedPlatform('');
+                  setSelectedMediaType('');
+                  setSelectedTheologicalTheme('');
+                }}
+                className="text-sm text-gray-500 hover:text-gray-700 underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Q&A List */}
+        <div className="space-y-6">
+          {paginatedQA.map((qa) => (
+            <div key={qa.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        #{qa.id}
+                      </span>
+                      <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        {qa.category}
+                      </span>
+                      <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        {qa.platform}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {qa.question}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setExpandedQA(expandedQA === qa.id ? null : qa.id)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    {expandedQA === qa.id ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </button>
+                </div>
+
+                {/* Answer Preview */}
+                <div className="text-gray-700 mb-4">
+                  {qa.answer.length > 200 ? `${qa.answer.substring(0, 200)}...` : qa.answer}
+                </div>
+
+                {/* Bible Verses */}
+                {qa.bibleVerses.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <BookOpen className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">Bible Verses Referenced:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {qa.bibleVerses.map((verse, index) => {
+                        const bibleVerse = getBibleVerse(verse);
+                        return (
+                          <div key={index} className="group relative">
+                            <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded cursor-pointer hover:bg-yellow-200">
+                              {verse}
+                            </span>
+                            {bibleVerse && (
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                                <div className="font-semibold mb-1">{bibleVerse.reference}</div>
+                                <div className="mb-2">{bibleVerse.text}</div>
+                                <div className="text-gray-300 text-xs">
+                                  Context: {bibleVerse.context} • Used {bibleVerse.usageCount} times
+                                </div>
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Metadata */}
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-4">
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>{qa.date}</span>
+                  </div>
+                  {qa.location && (
+                    <div className="flex items-center space-x-1">
+                      <MapPin className="h-4 w-4" />
+                      <span>{qa.location}</span>
+                    </div>
+                  )}
+                  <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                    {qa.mediaType}
+                  </span>
+                  <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                    {qa.ageGroup}
+                  </span>
+                </div>
+
+                {/* Expanded Content */}
+                {expandedQA === qa.id && (
+                  <div className="border-t pt-4 mt-4">
+                    <div className="space-y-4">
+                      {/* Full Answer */}
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2">Complete Answer:</h4>
+                        <p className="text-gray-700 leading-relaxed">{qa.answer}</p>
+                      </div>
+
+                      {/* Detailed Bible Verses */}
+                      {qa.bibleVerses.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">Detailed Bible References:</h4>
+                          <div className="space-y-3">
+                            {qa.bibleVerses.map((verse, index) => {
+                              const bibleVerse = getBibleVerse(verse);
+                              return (
+                                <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                  <div className="font-semibold text-yellow-800 mb-2">{verse}</div>
+                                  {bibleVerse && (
+                                    <>
+                                      <div className="text-gray-700 mb-2">{bibleVerse.text}</div>
+                                      <div className="text-sm text-gray-600">
+                                        <strong>Context:</strong> {bibleVerse.context}
+                                      </div>
+                                      <div className="text-sm text-gray-600">
+                                        <strong>Usage:</strong> Referenced {bibleVerse.usageCount} times
+                                      </div>
+                                      <div className="text-sm text-gray-600">
+                                        <strong>First Used:</strong> {bibleVerse.firstUsed} • <strong>Last Used:</strong> {bibleVerse.lastUsed}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Additional Metadata */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">Theological Theme:</h4>
+                          <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded">
+                            {qa.theologicalTheme}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">Subcategory:</h4>
+                          <span className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded">
+                            {qa.subcategory}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Source Link */}
+                      {qa.source && (
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">Source:</h4>
+                          <a
+                            href={qa.source}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 underline"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            <span>View Original Source</span>
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Timestamp */}
+                      {qa.timestamp && (
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">Timestamp:</h4>
+                          <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded">
+                            {qa.timestamp}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex justify-center">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-2 text-sm font-medium rounded-md ${
+                        currentPage === page
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Footer Stats */}
+        <div className="mt-12 bg-white rounded-xl shadow-lg p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600">{qaDatabase.length}</div>
+              <div className="text-sm text-gray-600">Total Q&A Sessions</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">{bibleVerses.length}</div>
+              <div className="text-sm text-gray-600">Bible Verses Referenced</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600">{categories.length}</div>
+              <div className="text-sm text-gray-600">Categories Covered</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
