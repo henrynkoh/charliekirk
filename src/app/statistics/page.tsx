@@ -3,53 +3,61 @@
 import { useMemo } from 'react';
 import { BarChart3, TrendingUp, BookOpen, MessageSquare } from 'lucide-react';
 import { qaDatabase, bibleVerses } from '@/data/qa-database';
+import { qaDatabaseKo, bibleVersesKo } from '@/data/qa-database-ko';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function StatisticsPage() {
+  const { language, t } = useLanguage();
+  
   const stats = useMemo(() => {
+    // Get current language data
+    const currentQADatabase = language === 'ko' ? qaDatabaseKo : qaDatabase;
+    const currentBibleVerses = language === 'ko' ? bibleVersesKo : bibleVerses;
+    
     // Category distribution
-    const categoryStats = qaDatabase.reduce((acc, qa) => {
+    const categoryStats = currentQADatabase.reduce((acc, qa) => {
       acc[qa.category] = (acc[qa.category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     // Platform distribution
-    const platformStats = qaDatabase.reduce((acc, qa) => {
+    const platformStats = currentQADatabase.reduce((acc, qa) => {
       acc[qa.platform] = (acc[qa.platform] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     // Media type distribution
-    const mediaTypeStats = qaDatabase.reduce((acc, qa) => {
+    const mediaTypeStats = currentQADatabase.reduce((acc, qa) => {
       acc[qa.mediaType] = (acc[qa.mediaType] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     // Theological theme distribution
-    const themeStats = qaDatabase.reduce((acc, qa) => {
+    const themeStats = currentQADatabase.reduce((acc, qa) => {
       acc[qa.theologicalTheme] = (acc[qa.theologicalTheme] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     // Bible verse usage
-    const verseUsageStats = bibleVerses
+    const verseUsageStats = currentBibleVerses
       .sort((a, b) => b.usageCount - a.usageCount)
       .slice(0, 10);
 
     // Timeline data
-    const timelineData = qaDatabase.reduce((acc, qa) => {
+    const timelineData = currentQADatabase.reduce((acc, qa) => {
       const year = qa.date.split('-')[0];
       acc[year] = (acc[year] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     // Age group distribution
-    const ageGroupStats = qaDatabase.reduce((acc, qa) => {
+    const ageGroupStats = currentQADatabase.reduce((acc, qa) => {
       acc[qa.ageGroup] = (acc[qa.ageGroup] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     // Bible verses per Q&A
-    const versesPerQA = qaDatabase.map(qa => qa.bibleVerses.length);
+    const versesPerQA = currentQADatabase.map(qa => qa.bibleVerses.length);
     const avgVersesPerQA = versesPerQA.reduce((sum, count) => sum + count, 0) / versesPerQA.length;
 
     return {
@@ -125,22 +133,22 @@ export default function StatisticsPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Charlie Kirk Q&A Statistics
+                {t('stats.title')}
               </h1>
               <p className="text-lg text-gray-600">
-                Comprehensive Analysis of Religious Discourse and Biblical Integration
+                {t('stats.subtitle')}
               </p>
             </div>
             <div className="mt-4 lg:mt-0">
               <div className="flex items-center space-x-4">
                 <div className="bg-purple-100 px-4 py-2 rounded-lg">
                   <span className="text-sm font-medium text-purple-800">
-                    {stats.totalQA} Q&A Sessions
+                    {stats.totalQA} {t('stats.total_sessions')}
                   </span>
                 </div>
                 <div className="bg-green-100 px-4 py-2 rounded-lg">
                   <span className="text-sm font-medium text-green-800">
-                    {stats.totalVerses} Bible Verses
+                    {stats.totalVerses} {t('stats.unique_verses')}
                   </span>
                 </div>
               </div>
@@ -153,19 +161,19 @@ export default function StatisticsPage() {
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Total Q&A Sessions"
+            title={t('stats.total_sessions')}
             value={stats.totalQA}
             icon={MessageSquare}
             color="blue"
           />
           <StatCard
-            title="Bible Verses Referenced"
+            title={t('stats.unique_verses')}
             value={stats.totalVerses}
             icon={BookOpen}
             color="green"
           />
           <StatCard
-            title="Total Biblical References"
+            title="총 성경 참조"
             value={stats.totalReferences}
             icon={TrendingUp}
             color="purple"

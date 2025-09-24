@@ -2,17 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, BarChart3, Menu, X } from 'lucide-react';
+import { Home, BookOpen, BarChart3, Menu, X, Globe } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Navigation() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   const navItems = [
-    { name: 'Q&A Archive', href: '/', icon: Home },
-    { name: 'Bible Verses', href: '/bible-verses', icon: BookOpen },
-    { name: 'Statistics', href: '/statistics', icon: BarChart3 },
+    { name: t('nav.home'), href: '/', icon: Home },
+    { name: t('nav.bible_verses'), href: '/bible-verses', icon: BookOpen },
+    { name: t('nav.statistics'), href: '/statistics', icon: BarChart3 },
   ];
 
   return (
@@ -25,7 +27,7 @@ export default function Navigation() {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <BookOpen className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Charlie Kirk Q&A</span>
+              <span className="text-xl font-bold text-gray-900">{t('main.title')}</span>
             </Link>
           </div>
 
@@ -50,6 +52,17 @@ export default function Navigation() {
                   </Link>
                 );
               })}
+              
+              {/* Language Toggle */}
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-gray-600" />
+                <button
+                  onClick={() => setLanguage(language === 'en' ? 'ko' : 'en')}
+                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  {language === 'en' ? '한국어' : 'English'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -87,6 +100,20 @@ export default function Navigation() {
                   </Link>
                 );
               })}
+              
+              {/* Mobile Language Toggle */}
+              <div className="flex items-center space-x-2 px-3 py-2">
+                <Globe className="h-5 w-5 text-gray-600" />
+                <button
+                  onClick={() => {
+                    setLanguage(language === 'en' ? 'ko' : 'en');
+                    setIsOpen(false);
+                  }}
+                  className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  {language === 'en' ? '한국어' : 'English'}
+                </button>
+              </div>
             </div>
           </div>
         )}

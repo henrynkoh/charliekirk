@@ -3,13 +3,20 @@
 import { useState, useMemo } from 'react';
 import { Search, BookOpen, Filter } from 'lucide-react';
 import { bibleVerses, qaDatabase } from '@/data/qa-database';
+import { bibleVersesKo, qaDatabaseKo } from '@/data/qa-database-ko';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function BibleVersesPage() {
+  const { language, t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'usage' | 'reference' | 'firstUsed'>('usage');
 
+  // Get current language data
+  const currentBibleVerses = language === 'ko' ? bibleVersesKo : bibleVerses;
+  const currentQADatabase = language === 'ko' ? qaDatabaseKo : qaDatabase;
+
   const filteredVerses = useMemo(() => {
-    const filtered = bibleVerses.filter(verse => 
+    const filtered = currentBibleVerses.filter(verse => 
       verse.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
       verse.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
       verse.context.toLowerCase().includes(searchTerm.toLowerCase())
@@ -30,10 +37,10 @@ export default function BibleVersesPage() {
     });
 
     return filtered;
-  }, [searchTerm, sortBy]);
+  }, [searchTerm, sortBy, currentBibleVerses]);
 
   const getUsageInQA = (reference: string) => {
-    return qaDatabase.filter(qa => qa.bibleVerses.includes(reference)).length;
+    return currentQADatabase.filter(qa => qa.bibleVerses.includes(reference)).length;
   };
 
   return (
@@ -44,22 +51,22 @@ export default function BibleVersesPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Bible Verses Referenced by Charlie Kirk
+                {t('bible.title')}
               </h1>
               <p className="text-lg text-gray-600">
-                234+ Bible Verses with Context, Usage Statistics, and Cross-References
+                {t('bible.subtitle')}
               </p>
             </div>
             <div className="mt-4 lg:mt-0">
               <div className="flex items-center space-x-4">
                 <div className="bg-green-100 px-4 py-2 rounded-lg">
                   <span className="text-sm font-medium text-green-800">
-                    {filteredVerses.length} Verses Found
+                    {filteredVerses.length} {t('bible.verse')} {t('bible.no_results').includes('찾을 수 없습니다') ? '찾음' : 'Found'}
                   </span>
                 </div>
                 <div className="bg-blue-100 px-4 py-2 rounded-lg">
                   <span className="text-sm font-medium text-blue-800">
-                    {bibleVerses.reduce((sum, verse) => sum + verse.usageCount, 0)} Total References
+                    {currentBibleVerses.reduce((sum, verse) => sum + verse.usageCount, 0)} {t('bible.usage_count')}
                   </span>
                 </div>
               </div>
@@ -77,7 +84,7 @@ export default function BibleVersesPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
-                  placeholder="Search Bible verses, text, or context..."
+                  placeholder={t('bible.search_placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -92,9 +99,9 @@ export default function BibleVersesPage() {
                   onChange={(e) => setSortBy(e.target.value as 'usage' | 'reference' | 'firstUsed')}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 >
-                  <option value="usage">Sort by Usage</option>
-                  <option value="reference">Sort by Reference</option>
-                  <option value="firstUsed">Sort by First Used</option>
+                  <option value="usage">{t('bible.usage_count')}로 정렬</option>
+                  <option value="reference">{t('bible.verse')}로 정렬</option>
+                  <option value="firstUsed">첫 사용일로 정렬</option>
                 </select>
               </div>
             </div>

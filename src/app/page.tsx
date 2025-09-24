@@ -3,8 +3,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, Filter, BookOpen, Calendar, MapPin, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { qaDatabase, bibleVerses, categories, platforms, mediaTypes, theologicalThemes } from '@/data/qa-database';
+import { qaDatabaseKo, bibleVersesKo, categoriesKo, platformsKo, mediaTypesKo, theologicalThemesKo } from '@/data/qa-database-ko';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Home() {
+  const { language, t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('');
@@ -15,9 +18,17 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
 
+  // Get current language data
+  const currentQADatabase = language === 'ko' ? qaDatabaseKo : qaDatabase;
+  const currentBibleVerses = language === 'ko' ? bibleVersesKo : bibleVerses;
+  const currentCategories = language === 'ko' ? categoriesKo : categories;
+  const currentPlatforms = language === 'ko' ? platformsKo : platforms;
+  const currentMediaTypes = language === 'ko' ? mediaTypesKo : mediaTypes;
+  const currentTheologicalThemes = language === 'ko' ? theologicalThemesKo : theologicalThemes;
+
   // Filter and search logic
   const filteredQA = useMemo(() => {
-    return qaDatabase.filter(qa => {
+    return currentQADatabase.filter(qa => {
       const matchesSearch = searchTerm === '' || 
         qa.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
         qa.answer.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -30,7 +41,7 @@ export default function Home() {
 
       return matchesSearch && matchesCategory && matchesPlatform && matchesMediaType && matchesTheologicalTheme;
     });
-  }, [searchTerm, selectedCategory, selectedPlatform, selectedMediaType, selectedTheologicalTheme]);
+  }, [searchTerm, selectedCategory, selectedPlatform, selectedMediaType, selectedTheologicalTheme, currentQADatabase]);
 
   // Pagination
   const totalPages = Math.ceil(filteredQA.length / itemsPerPage);
@@ -38,7 +49,7 @@ export default function Home() {
 
   // Bible verse lookup
   const getBibleVerse = (reference: string) => {
-    return bibleVerses.find(verse => verse.reference === reference);
+    return currentBibleVerses.find(verse => verse.reference === reference);
   };
 
   // Reset pagination when filters change
@@ -54,22 +65,22 @@ export default function Home() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Charlie Kirk: Complete Religious Q&A Archive
+                {t('main.title')}
               </h1>
               <p className="text-lg text-gray-600">
-                847+ Documented Religious Q&A Sessions • 234+ Bible Verses Referenced
+                {t('main.subtitle')}
               </p>
             </div>
             <div className="mt-4 lg:mt-0">
               <div className="flex items-center space-x-4">
                 <div className="bg-blue-100 px-4 py-2 rounded-lg">
                   <span className="text-sm font-medium text-blue-800">
-                    {filteredQA.length} Sessions Found
+                    {t('main.results_count').replace('{count}', filteredQA.length.toString()).replace('{total}', currentQADatabase.length.toString())}
                   </span>
                 </div>
                 <div className="bg-green-100 px-4 py-2 rounded-lg">
                   <span className="text-sm font-medium text-green-800">
-                    {bibleVerses.length} Bible Verses
+                    {currentBibleVerses.length} {t('bible.unique_verses')}
                   </span>
                 </div>
               </div>
@@ -86,7 +97,7 @@ export default function Home() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <input
               type="text"
-              placeholder="Search questions, answers, or Bible verses..."
+              placeholder={t('main.search_placeholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -100,7 +111,7 @@ export default function Home() {
               className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-medium"
             >
               <Filter className="h-5 w-5" />
-              <span>Advanced Filters</span>
+              <span>{t('main.filter_category')}</span>
               {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
           </div>
@@ -109,56 +120,56 @@ export default function Home() {
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('main.filter_category')}</label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">All Categories</option>
-                  {categories.map(category => (
+                  <option value="">{t('main.filter_all')} {t('main.filter_category')}</option>
+                  {currentCategories.map(category => (
                     <option key={category} value={category}>{category}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Platform</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('main.filter_platform')}</label>
                 <select
                   value={selectedPlatform}
                   onChange={(e) => setSelectedPlatform(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">All Platforms</option>
-                  {platforms.map(platform => (
+                  <option value="">{t('main.filter_all')} {t('main.filter_platform')}</option>
+                  {currentPlatforms.map(platform => (
                     <option key={platform} value={platform}>{platform}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Media Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('main.media_type')}</label>
                 <select
                   value={selectedMediaType}
                   onChange={(e) => setSelectedMediaType(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">All Media Types</option>
-                  {mediaTypes.map(mediaType => (
+                  <option value="">{t('main.filter_all')} {t('main.media_type')}</option>
+                  {currentMediaTypes.map(mediaType => (
                     <option key={mediaType} value={mediaType}>{mediaType}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Theological Theme</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('main.filter_theme')}</label>
                 <select
                   value={selectedTheologicalTheme}
                   onChange={(e) => setSelectedTheologicalTheme(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">All Themes</option>
-                  {theologicalThemes.map(theme => (
+                  <option value="">{t('main.filter_all')} {t('main.filter_theme')}</option>
+                  {currentTheologicalThemes.map(theme => (
                     <option key={theme} value={theme}>{theme}</option>
                   ))}
                 </select>
@@ -178,7 +189,7 @@ export default function Home() {
                 }}
                 className="text-sm text-gray-500 hover:text-gray-700 underline"
               >
-                Clear all filters
+{t('main.filter_all')} 필터 지우기
               </button>
             </div>
           )}
